@@ -100,3 +100,18 @@ export interface PlaySchedule {
   maxCapacity?: number;
 }
 
+export type AuthRole = 'host' | 'player';
+
+export interface AuthUser {
+  uid: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+}
+
+export interface AuthSessionResponse {
+  user: AuthUser;
+  role: AuthRole;
+  isHost: boolean;
+}
+
