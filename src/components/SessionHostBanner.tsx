@@ -8,7 +8,6 @@ import {
   ArrowLeftRight,
   Radio,
   Calendar,
-  Sparkles,
 } from 'lucide-react';
 import { PlaySchedule, Player } from '../types';
 import { formatScheduleRemainingTime } from '../utils/hostPermissions';
