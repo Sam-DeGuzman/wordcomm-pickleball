@@ -42,6 +42,8 @@ Consult `docs/adrs/` when making architectural choices:
 - [`001-provider-managed-session-windows.md`](./docs/adrs/001-provider-managed-session-windows.md): Provider-managed 3–5 hr session blocks.
 - [`002-session-host-arbitrary-court-and-queue-management.md`](./docs/adrs/002-session-host-arbitrary-court-and-queue-management.md): Session Host identity and override powers.
 - [`003-single-shared-fifo-paddle-rack-multi-court.md`](./docs/adrs/003-single-shared-fifo-paddle-rack-multi-court.md): Single shared FIFO paddle queue across all session courts.
+- [`004-session-room-gating-and-configuration.md`](./docs/adrs/004-session-room-gating-and-configuration.md): Session Room gating and mandatory initial configuration (court provider, location, date, time window, default winning score 12).
+
 
 ---
 

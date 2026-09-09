@@ -12,30 +12,34 @@ The organization or facility administrator controlling the venue and courts.
 - **Attributes**: `id`, `name`, `contactInfo`, `venueAddress`, `operatingRules`.
 - **Role**: Sole authority on creating, modifying, and enforcing court rental windows.
 
-### `CourtRental` / `PlaySchedule` (`PlaySession`)
-A bounded time window dedicated to community pickleball play.
+### `SessionRoom` (`PlaySessionRoom` / `CourtRental`)
+The operational room container for an open-play pickleball session. All management tooling requires an active, configured room.
 - **Attributes**:
-  - `id`: Unique identifier
-  - `providerId`: ID of managing Court Provider
-  - `hostPlayerId`: Player ID of the designated Session Host
-  - `allocatedCourtIds`: Array of Court IDs reserved for this session
-  - `startTime`: Timestamp (ISO string or unix epoch)
-  - `endTime`: Timestamp (ISO string or unix epoch)
-  - `durationHours`: Number bounded between 3 and 5 hours
-  - `status`: `'scheduled' | 'active' | 'completed' | 'cancelled'`
-  - `maxCapacity`: Optional maximum number of players permitted
+  - `id`: string
+  - `providerName`: string (Court Provider / Venue operator name)
+  - `location`: string (physical venue address / court facility)
+  - `date`: string (session date, e.g. `YYYY-MM-DD`)
+  - `startTime`: string (rental start time, e.g. `18:00`)
+  - `endTime`: string (rental end time, e.g. `21:00` or 3–5 hour window)
+  - `courtCount`: number / `allocatedCourts`: `Court[]` (physical courts reserved for the room)
+  - `winningScore`: number (target game score for matches, **defaults to 12**)
+  - `status`: `'unconfigured' | 'scheduled' | 'active' | 'completed'`
+  - `hostId`: string (designated host)
 
 ---
 
 ## Domain Invariants
 
-1. **Strict Duration Range**: Community play sessions are strictly bounded to **3 to 5 hours**. Sessions outside this window violate provider constraints.
-2. **Provider Authority**: Players cannot unilaterally schedule or extend court time; all sessions are managed strictly by the Court Provider.
-3. **Session Host Assignment**: Every `PlaySchedule` must have a designated `hostPlayerId` (a valid registered Player) assigned by the Court Provider / scheduling admin prior to becoming `'active'`.
-4. **Queue & Court Gating**: Matchmaking and Paddle Rack operations are active only when an associated `CourtRental` status is `'active'`.
+1. **Room Configuration Gating**: All host management features (`SessionRoster`, `PaddleRack`, `CourtsView`, `Matchmaker`) are strictly gated and inaccessible until a `SessionRoom` is scheduled and configured.
+2. **Strict Duration Range**: Community play sessions are strictly bounded to **3 to 5 hours** per provider window.
+3. **Winning Score Default**: The default winning target score for courts within a configured room is **12 points** (with minimum 2-point win margin).
+4. **Provider & Location Binding**: A room must explicitly record the Court Provider name and physical venue location upon scheduling.
+
 
 ---
 
 ## Architectural Decisions
 - [ADR 001: Provider-Managed Fixed Session Windows (3–5 Hours) for Court Access](../../adrs/001-provider-managed-session-windows.md)
+- [ADR 004: Session Room Gating and Mandatory Initial Configuration](../../adrs/004-session-room-gating-and-configuration.md)
+
 

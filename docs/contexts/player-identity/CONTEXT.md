@@ -36,6 +36,16 @@ The complete pool of active participant paddle profiles participating in a given
   - Quick-enqueue player into the paddle rack.
   - Remove player from roster.
 
+### `RestingRoster`
+The sub-collection of session participants who are currently not enqueued in the `PaddleRack` or active on a court.
+- **Role**: Serves as the bench/holding pool when players take a break, arrive early, or sit out rotations.
+
+### `ParticipantState`
+The current runtime state of a paddle profile during an active session:
+- `resting`: Present in the `RestingRoster`.
+- `queued`: Enqueued at a specific position in the `PaddleRack`.
+- `on-court`: Assigned to an active match on a `Court`.
+
 ### `PaddleColorPalette`
 A curated high-contrast palette of solid colors for instantaneous visual differentiation on the digital rack and physical courts:
 - Volt Yellow (`#F4E022`)
@@ -48,6 +58,7 @@ A curated high-contrast palette of solid colors for instantaneous visual differe
 - Crimson Red (`#EF4444`)
 
 ---
+
 
 
 ## Parked Domain Concepts (Reserved for Future Reactivation)

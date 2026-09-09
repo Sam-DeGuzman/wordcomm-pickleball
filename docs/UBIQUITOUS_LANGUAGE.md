@@ -10,21 +10,16 @@ This glossary establishes the canonical domain vocabulary for **Wordcomm Pickleb
 *The venue operator, facility management, or club host that owns/leases physical pickleball courts and dictates venue availability.*
 - **Invariants**: Strictly controls available operational windows, pricing, and court allocation. Players and community organizers cannot arbitrarily create or extend court time outside the provider's authorized window.
 
-### **Court Rental / Play Session (`PlaySession` / `CourtSchedule`)**
-*A designated community play time block lasting between 3 to 5 hours, booked or authorized through the Court Provider.*
-- **Scope**: During a Court Rental window, community members can check in, enqueue in the paddle rack, and play matches on allocated courts.
-- **Invariants**:
-  - Duration is bounded strictly (typically 3–5 hours).
-  - Managed and enforced strictly by the Court Provider.
-  - Controls the operational state of associated courts (e.g. courts are only active for club matches during an active session).
-  - Every active schedule is assigned exactly one primary **Session Host**.
+### **Session Room (`SessionRoom` / `PlaySessionRoom`)**
+*The foundational operational session container. All host tooling features (Roster, Paddle Rack, Courts, Matchmaking) are strictly gated and unavailable until a Session Room is scheduled and configured.*
+- **Required Configuration**: Court Provider Name, Physical Location / Address, Date, Rental Start & End Time, Allocated Court Count, and Winning Score (defaults to 12).
+- **Scope**: Serves as the security and operational boundary for all matches and queues.
 
 ### **Session Host (`SessionHost`)**
-*A designated registered Player (Member) assigned to direct and moderate a specific `PlaySession` / `CourtSchedule`.*
-- **Scope**: Elevated operational control over court matches, rack dispatching, and score tracking during that session's active window.
+*A designated registered Player (Member) assigned to direct and moderate a specific `SessionRoom`.*
+- **Scope**: Elevated operational control over court matches, rack dispatching, roster management, and score tracking during that session's active window.
 - **Invariants**:
-  - Must be an active registered `Player`.
-  - Authority is active strictly within their assigned `PlaySession` duration.
+  - Authority is active strictly within their assigned `SessionRoom` duration.
   - Can manually override rack dispatch, adjust court match lineups, and input/correct match scores.
 
 ---
@@ -41,7 +36,8 @@ This glossary establishes the canonical domain vocabulary for **Wordcomm Pickleb
 - **Dispatch**: When a court frees up, the next 4 (doubles) or 2 (singles) paddles are called and dispatched to that court.
 
 ### **Match (`MatchmakingMatch`)**
-*A game played to a target score (e.g., 11 points, win by 2) between Team A and Team B in singles (1v1) or doubles (2v2) format.*
+*A game played to a target score (default **12 points**, win by 2) between Team A and Team B in singles (1v1) or doubles (2v2) format.*
+
 
 ---
 
@@ -61,10 +57,20 @@ This glossary establishes the canonical domain vocabulary for **Wordcomm Pickleb
 ### **Session Roster (`SessionRoster`)**
 *The master pool of participant paddle profiles registered for a specific session by the Session Host, from which players are enqueued into the paddle rack, dispatched to courts, or placed on rest.*
 
+### **Resting Roster (`RestingRoster`)**
+*The subset of registered session participants who are currently taking a break, sitting out rotations, or not actively queued in the paddle rack or playing on a court.*
+
+### **Session Participant State (`ParticipantState`)**
+*The exclusive lifecycle state of a participant during an active session:*
+- `resting`: Member of the Resting Roster (available to be queued when ready).
+- `queued`: Actively occupying a slot in the FIFO `PaddleRack`.
+- `on-court`: Actively playing in a live match on an assigned `Court`.
+
 ### **Paddle Profile Visual (`PaddleConfig` / `paddleColor`)**
 *Simplified visual indicator (color/accent) for physical and digital paddle recognition in the rack.*
 
 ---
+
 
 
 ## 4. Parked Concepts (Future Reactivation)
