@@ -1,0 +1,8 @@
+{
+  "name": "Remix Wordcomm Match - Pickleball Paddle Rack \u0026 Matchmaking",
+  "description": "Mobile-responsive pickleball matchmaking prototype with an animated paddle rack, gamified player profiles, and custom paddle avatars inspired by the Wordcomm palette.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
