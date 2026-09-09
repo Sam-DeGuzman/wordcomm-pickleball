@@ -86,3 +86,17 @@ export interface Quest {
   completed: boolean;
   type: 'daily' | 'weekly';
 }
+
+export interface PlaySchedule {
+  id: string;
+  providerId: string;
+  hostPlayerId: string;
+  title: string;
+  allocatedCourtIds: string[];
+  startTime: string;
+  endTime: string;
+  durationHours: number;
+  status: 'scheduled' | 'active' | 'completed' | 'cancelled';
+  maxCapacity?: number;
+}
+
