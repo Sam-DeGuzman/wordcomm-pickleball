@@ -1,17 +1,32 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Court, Player } from '../types';
 import { Paddle } from './Paddle';
-import { Trophy, Clock, CheckCircle2, RotateCcw, Zap, Award } from 'lucide-react';
+import { HostCourtModal } from './HostCourtModal';
+import {
+  Trophy,
+  Clock,
+  CheckCircle2,
+  RotateCcw,
+  Zap,
+  Award,
+  Shield,
+  SlidersHorizontal,
+  Minus,
+  Plus,
+} from 'lucide-react';
 
-interface CourtsViewProps {
+export interface CourtsViewProps {
   courts: Court[];
   currentUser: Player;
   onUpdateScore: (courtId: string, team: 'A' | 'B') => void;
   onFinishMatch: (courtId: string) => void;
   onResetCourt: (courtId: string) => void;
   onSelectPlayer: (player: Player) => void;
+  isHost?: boolean;
+  availableBenchPlayers?: Player[];
+  onHostSaveCourt?: (updatedCourt: Court) => void;
 }
 
 export const CourtsView: React.FC<CourtsViewProps> = ({
@@ -21,23 +36,44 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
   onFinishMatch,
   onResetCourt,
   onSelectPlayer,
+  isHost = false,
+  availableBenchPlayers = [],
+  onHostSaveCourt,
 }) => {
+  const [activeHostModalCourt, setActiveHostModalCourt] = useState<Court | null>(null);
+
+  const handleHostSave = (updatedCourt: Court) => {
+    if (onHostSaveCourt) {
+      onHostSaveCourt(updatedCourt);
+    }
+  };
+
   return (
     <div className="w-full space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h2 className="text-xl sm:text-2xl font-['Outfit'] font-black text-white uppercase tracking-tight flex items-center gap-2">
-            <span>Wordcomm Courts</span>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1F5B73] text-[#F4E022] font-mono font-bold">
-              {courts.filter((c) => c.status === 'in-progress').length} Live Matches
-            </span>
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-['Outfit'] font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <span>Wordcomm Courts</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#1F5B73] text-[#F4E022] font-mono font-bold">
+                {courts.filter((c) => c.status === 'in-progress').length} Live Matches
+              </span>
+            </h2>
+            {isHost && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#E07137]/20 text-[#E07137] border border-[#E07137]/40 flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                <Shield className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Host Arbitration Active</span>
+              </span>
+            )}
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Interactive digital court boards. Live scoreboard, Kitchen NVZ lines, and paddle positions.
           </p>
         </div>
       </div>
 
+      {/* Courts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {courts.map((court) => {
           const isLive = court.status === 'in-progress';
@@ -71,6 +107,17 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {isHost && (
+                    <button
+                      onClick={() => setActiveHostModalCourt(court)}
+                      className="px-2.5 py-1 rounded-xl bg-[#E07137]/20 hover:bg-[#E07137]/30 text-[#E07137] border border-[#E07137]/40 font-['Outfit'] font-bold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Host Court Arbitration Controls"
+                    >
+                      <Shield className="w-3 h-3 stroke-[2.5]" />
+                      <span>Host Arbitrate</span>
+                    </button>
+                  )}
+
                   {isLive && (
                     <span className="text-xs font-mono text-[#F4E022] flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> LIVE
@@ -140,12 +187,32 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
                     </div>
 
                     {isLive && !isGameOver && (
-                      <button
-                        onClick={() => onUpdateScore(court.id, 'A')}
-                        className="z-10 w-full py-1.5 rounded-lg bg-[#F4E022] hover:bg-[#E5CF15] text-[#0B0E14] font-['Outfit'] font-black text-xs uppercase tracking-wider cursor-pointer shadow flex items-center justify-center gap-1"
-                      >
-                        <Zap className="w-3 h-3 fill-current" /> +1 Point Alpha
-                      </button>
+                      <div className="z-10 w-full flex items-center gap-1.5">
+                        <button
+                          onClick={() => onUpdateScore(court.id, 'A')}
+                          className="flex-1 py-1.5 rounded-lg bg-[#F4E022] hover:bg-[#E5CF15] text-[#0B0E14] font-['Outfit'] font-black text-xs uppercase tracking-wider cursor-pointer shadow flex items-center justify-center gap-1"
+                        >
+                          <Zap className="w-3 h-3 fill-current" /> +1 Alpha
+                        </button>
+                        {isHost && onHostSaveCourt && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (court.scoreA > 0) {
+                                onHostSaveCourt({
+                                  ...court,
+                                  scoreA: court.scoreA - 1,
+                                });
+                              }
+                            }}
+                            disabled={court.scoreA <= 0}
+                            className="px-2 py-1.5 rounded-lg bg-[#0E1722] hover:bg-[#182638] disabled:opacity-40 text-slate-300 border border-[#233549] text-xs font-bold cursor-pointer transition-colors"
+                            title="Host Quick -1 Point Alpha"
+                          >
+                            -1
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -193,12 +260,32 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
                     </div>
 
                     {isLive && !isGameOver && (
-                      <button
-                        onClick={() => onUpdateScore(court.id, 'B')}
-                        className="z-10 w-full py-1.5 rounded-lg bg-[#E07137] hover:bg-[#D46025] text-white font-['Outfit'] font-black text-xs uppercase tracking-wider cursor-pointer shadow flex items-center justify-center gap-1"
-                      >
-                        <Zap className="w-3 h-3 fill-current" /> +1 Point Bravo
-                      </button>
+                      <div className="z-10 w-full flex items-center gap-1.5">
+                        {isHost && onHostSaveCourt && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (court.scoreB > 0) {
+                                onHostSaveCourt({
+                                  ...court,
+                                  scoreB: court.scoreB - 1,
+                                });
+                              }
+                            }}
+                            disabled={court.scoreB <= 0}
+                            className="px-2 py-1.5 rounded-lg bg-[#0E1722] hover:bg-[#182638] disabled:opacity-40 text-slate-300 border border-[#233549] text-xs font-bold cursor-pointer transition-colors"
+                            title="Host Quick -1 Point Bravo"
+                          >
+                            -1
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onUpdateScore(court.id, 'B')}
+                          className="flex-1 py-1.5 rounded-lg bg-[#E07137] hover:bg-[#D46025] text-white font-['Outfit'] font-black text-xs uppercase tracking-wider cursor-pointer shadow flex items-center justify-center gap-1"
+                        >
+                          <Zap className="w-3 h-3 fill-current" /> +1 Bravo
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -225,7 +312,7 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
                 ) : isLive ? (
                   <div className="flex items-center justify-between w-full">
                     <span className="text-[11px] text-slate-400">
-                      Standard Club Rule: First to 11 points, win by 2
+                      Rule: Target {court.gamePoint} pts, win by 2
                     </span>
                     <button
                       onClick={() => onResetCourt(court.id)}
@@ -245,6 +332,16 @@ export const CourtsView: React.FC<CourtsViewProps> = ({
           );
         })}
       </div>
+
+      {/* Host Arbitrate Modal */}
+      {activeHostModalCourt && (
+        <HostCourtModal
+          court={activeHostModalCourt}
+          availableBenchPlayers={availableBenchPlayers}
+          onSave={handleHostSave}
+          onClose={() => setActiveHostModalCourt(null)}
+        />
+      )}
     </div>
   );
 };

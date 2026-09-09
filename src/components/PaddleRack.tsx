@@ -11,9 +11,11 @@ import {
   ChevronRight,
   LayoutList,
   SlidersHorizontal,
-  Flame,
   ArrowRight,
+  ArrowLeft,
+  ArrowUp,
   Shield,
+  X,
 } from 'lucide-react';
 
 interface PaddleRackProps {
@@ -26,6 +28,10 @@ interface PaddleRackProps {
   onTriggerMatch: () => void;
   onClearRack: () => void;
   isUserInRack: boolean;
+  isHost?: boolean;
+  onMovePlayerInRack?: (fromIndex: number, toIndex: number) => void;
+  onHostRemovePlayer?: (playerId: string) => void;
+  onHostPromotePlayer?: (playerId: string) => void;
 }
 
 export const PaddleRack: React.FC<PaddleRackProps> = ({
@@ -38,6 +44,10 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
   onTriggerMatch,
   onClearRack,
   isUserInRack,
+  isHost = false,
+  onMovePlayerInRack,
+  onHostRemovePlayer,
+  onHostPromotePlayer,
 }) => {
   const [viewMode, setViewMode] = useState<'rack' | 'lineup'>('rack');
 
@@ -59,7 +69,7 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
       {/* Rack Header */}
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-[#202B3B]">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#F4E022] text-[#0B0E14] font-black text-xs font-['Outfit'] flex-shrink-0">
               4s
             </span>
@@ -69,6 +79,12 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
             <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#1F5B73] text-[#F4E022] border border-[#2A7594] whitespace-nowrap">
               {rackPlayers.length} Queued
             </span>
+            {isHost && (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#E07137]/20 text-[#E07137] border border-[#E07137]/40 flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+                <Shield className="w-3.5 h-3.5 stroke-[2.5]" />
+                <span>Host Queue Arbitrator</span>
+              </span>
+            )}
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Official club queue. First 4 paddles take the next open court for doubles play.
@@ -261,6 +277,69 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
                           Slot {slotNum}
                         </span>
                       </div>
+
+                      {/* Host Mini-Controls if isHost is true */}
+                      {isHost && (
+                        <div
+                          className="mt-2 flex items-center gap-1 bg-[#0D131C] p-1 rounded-lg border border-[#233346] shadow-md z-20"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {/* Move Left */}
+                          <button
+                            type="button"
+                            title="Move Left in Queue"
+                            disabled={index === 0}
+                            onClick={() => onMovePlayerInRack?.(index, index - 1)}
+                            className={`p-1 rounded text-xs transition-colors ${
+                              index === 0
+                                ? 'text-slate-600 cursor-not-allowed opacity-40'
+                                : 'text-slate-300 hover:text-white hover:bg-[#1E2B3D] cursor-pointer'
+                            }`}
+                          >
+                            <ArrowLeft className="w-3 h-3" />
+                          </button>
+
+                          {/* Promote to Priority Slot 1 */}
+                          <button
+                            type="button"
+                            title="Promote to Slot #1 (Priority Deck)"
+                            disabled={index === 0}
+                            onClick={() => onHostPromotePlayer?.(player.id)}
+                            className={`p-1 rounded text-xs transition-colors ${
+                              index === 0
+                                ? 'text-slate-600 cursor-not-allowed opacity-40'
+                                : 'text-[#F4E022] hover:bg-[#F4E022]/20 cursor-pointer'
+                            }`}
+                          >
+                            <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                          </button>
+
+                          {/* Move Right */}
+                          <button
+                            type="button"
+                            title="Move Right in Queue"
+                            disabled={index === rackPlayers.length - 1}
+                            onClick={() => onMovePlayerInRack?.(index, index + 1)}
+                            className={`p-1 rounded text-xs transition-colors ${
+                              index === rackPlayers.length - 1
+                                ? 'text-slate-600 cursor-not-allowed opacity-40'
+                                : 'text-slate-300 hover:text-white hover:bg-[#1E2B3D] cursor-pointer'
+                            }`}
+                          >
+                            <ArrowRight className="w-3 h-3" />
+                          </button>
+
+                          {/* Remove from Rack */}
+                          <button
+                            type="button"
+                            title="Host Eject from Queue"
+                            onClick={() => onHostRemovePlayer?.(player.id)}
+                            className="p-1 rounded text-xs text-rose-400 hover:text-rose-200 hover:bg-rose-950/60 cursor-pointer transition-colors"
+                          >
+                            <X className="w-3 h-3 stroke-[2.5]" />
+                          </button>
+                        </div>
+                      )}
                     </motion.div>
                   );
                 })}
@@ -334,31 +413,81 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
                     Team Alpha (Slots 1 & 2)
                   </div>
                   <div className="space-y-2">
-                    {nextUpPlayers.slice(0, 2).map((p, i) => (
-                      <div
-                        key={p.id}
-                        onClick={() => onSelectPlayer(p)}
-                        className="flex items-center justify-between p-2 rounded-lg bg-[#0E131C] border border-[#1A2330] hover:border-[#F4E022]/40 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5 h-5 rounded-full bg-[#F4E022] text-[#0B0E14] font-black text-[10px] flex items-center justify-center font-['Outfit']">
-                            #{i + 1}
-                          </span>
-                          <img
-                            src={p.avatarUrl}
-                            alt={p.name}
-                            className="w-7 h-7 rounded-full object-cover border border-[#F4E022]/50"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className="font-['Outfit'] font-bold text-xs text-white">
-                            {p.name}
-                          </span>
+                    {nextUpPlayers.slice(0, 2).map((p, i) => {
+                      const globalIndex = rackPlayers.findIndex((item) => item.id === p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => onSelectPlayer(p)}
+                          className="flex items-center justify-between p-2 rounded-lg bg-[#0E131C] border border-[#1A2330] hover:border-[#F4E022]/40 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-[#F4E022] text-[#0B0E14] font-black text-[10px] flex items-center justify-center font-['Outfit'] flex-shrink-0">
+                              #{i + 1}
+                            </span>
+                            <img
+                              src={p.avatarUrl}
+                              alt={p.name}
+                              className="w-7 h-7 rounded-full object-cover border border-[#F4E022]/50 flex-shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="font-['Outfit'] font-bold text-xs text-white truncate">
+                              {p.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] font-mono font-bold text-[#F4E022] bg-black/40 px-1.5 py-0.5 rounded">
+                              {p.duprRating.toFixed(2)}
+                            </span>
+                            {isHost && (
+                              <div
+                                className="flex items-center gap-1 pl-1 border-l border-[#202D3E]"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {globalIndex > 0 && (
+                                  <button
+                                    type="button"
+                                    title="Promote to Slot #1"
+                                    onClick={() => onHostPromotePlayer?.(p.id)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#F4E022]/20 text-[#F4E022] cursor-pointer transition-colors"
+                                  >
+                                    <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                                  </button>
+                                )}
+                                {globalIndex > 0 && (
+                                  <button
+                                    type="button"
+                                    title="Move Left in Queue"
+                                    onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex - 1)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#2A3B4E] text-slate-300 cursor-pointer transition-colors"
+                                  >
+                                    <ArrowLeft className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {globalIndex < rackPlayers.length - 1 && (
+                                  <button
+                                    type="button"
+                                    title="Move Right in Queue"
+                                    onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex + 1)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#2A3B4E] text-slate-300 cursor-pointer transition-colors"
+                                  >
+                                    <ArrowRight className="w-3 h-3" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  title="Host Eject from Queue"
+                                  onClick={() => onHostRemovePlayer?.(p.id)}
+                                  className="p-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/40 cursor-pointer transition-colors"
+                                >
+                                  <X className="w-3 h-3 stroke-[2.5]" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-[#F4E022] bg-black/40 px-1.5 py-0.5 rounded">
-                          {p.duprRating.toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {nextUpPlayers.length < 2 && (
                       <div className="p-2 rounded-lg border border-dashed border-slate-700 text-center text-xs text-slate-500">
                         Waiting for Slot #2...
@@ -373,31 +502,81 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
                     Team Bravo (Slots 3 & 4)
                   </div>
                   <div className="space-y-2">
-                    {nextUpPlayers.slice(2, 4).map((p, i) => (
-                      <div
-                        key={p.id}
-                        onClick={() => onSelectPlayer(p)}
-                        className="flex items-center justify-between p-2 rounded-lg bg-[#0E131C] border border-[#1A2330] hover:border-[#E07137]/40 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-5 h-5 rounded-full bg-[#E07137] text-white font-black text-[10px] flex items-center justify-center font-['Outfit']">
-                            #{i + 3}
-                          </span>
-                          <img
-                            src={p.avatarUrl}
-                            alt={p.name}
-                            className="w-7 h-7 rounded-full object-cover border border-[#E07137]/50"
-                            referrerPolicy="no-referrer"
-                          />
-                          <span className="font-['Outfit'] font-bold text-xs text-white">
-                            {p.name}
-                          </span>
+                    {nextUpPlayers.slice(2, 4).map((p, i) => {
+                      const globalIndex = rackPlayers.findIndex((item) => item.id === p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => onSelectPlayer(p)}
+                          className="flex items-center justify-between p-2 rounded-lg bg-[#0E131C] border border-[#1A2330] hover:border-[#E07137]/40 cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-[#E07137] text-white font-black text-[10px] flex items-center justify-center font-['Outfit'] flex-shrink-0">
+                              #{i + 3}
+                            </span>
+                            <img
+                              src={p.avatarUrl}
+                              alt={p.name}
+                              className="w-7 h-7 rounded-full object-cover border border-[#E07137]/50 flex-shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="font-['Outfit'] font-bold text-xs text-white truncate">
+                              {p.name}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-[10px] font-mono font-bold text-[#F4E022] bg-black/40 px-1.5 py-0.5 rounded">
+                              {p.duprRating.toFixed(2)}
+                            </span>
+                            {isHost && (
+                              <div
+                                className="flex items-center gap-1 pl-1 border-l border-[#202D3E]"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {globalIndex > 0 && (
+                                  <button
+                                    type="button"
+                                    title="Promote to Slot #1"
+                                    onClick={() => onHostPromotePlayer?.(p.id)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#F4E022]/20 text-[#F4E022] cursor-pointer transition-colors"
+                                  >
+                                    <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                                  </button>
+                                )}
+                                {globalIndex > 0 && (
+                                  <button
+                                    type="button"
+                                    title="Move Left in Queue"
+                                    onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex - 1)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#2A3B4E] text-slate-300 cursor-pointer transition-colors"
+                                  >
+                                    <ArrowLeft className="w-3 h-3" />
+                                  </button>
+                                )}
+                                {globalIndex < rackPlayers.length - 1 && (
+                                  <button
+                                    type="button"
+                                    title="Move Right in Queue"
+                                    onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex + 1)}
+                                    className="p-1 rounded bg-[#1A2433] hover:bg-[#2A3B4E] text-slate-300 cursor-pointer transition-colors"
+                                  >
+                                    <ArrowRight className="w-3 h-3" />
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  title="Host Eject from Queue"
+                                  onClick={() => onHostRemovePlayer?.(p.id)}
+                                  className="p-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/40 cursor-pointer transition-colors"
+                                >
+                                  <X className="w-3 h-3 stroke-[2.5]" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-[10px] font-mono font-bold text-[#F4E022] bg-black/40 px-1.5 py-0.5 rounded">
-                          {p.duprRating.toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                     {nextUpPlayers.length < 4 && (
                       <div className="p-2 rounded-lg border border-dashed border-slate-700 text-center text-xs text-slate-500">
                         Waiting for {4 - nextUpPlayers.length} more players...
@@ -431,36 +610,85 @@ export const PaddleRack: React.FC<PaddleRackProps> = ({
               </div>
 
               <div className="space-y-2">
-                {onDeckPlayers.map((p, idx) => (
-                  <div
-                    key={p.id}
-                    onClick={() => onSelectPlayer(p)}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-[#141C28] border border-[#1E2838] hover:border-slate-600 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg bg-[#1D2736] text-slate-300 font-mono text-xs flex items-center justify-center font-bold">
-                        #{idx + 5}
-                      </span>
-                      <img
-                        src={p.avatarUrl}
-                        alt={p.name}
-                        className="w-8 h-8 rounded-full object-cover border border-[#2A3B4E]"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div>
-                        <div className="font-['Outfit'] font-bold text-xs text-white">
-                          {p.name}
-                        </div>
-                        <div className="text-[10px] text-slate-400">
-                          {p.skillTier} • ~{(idx + 1) * 12}m wait
+                {onDeckPlayers.map((p, idx) => {
+                  const globalIndex = rackPlayers.findIndex((item) => item.id === p.id);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => onSelectPlayer(p)}
+                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#141C28] border border-[#1E2838] hover:border-slate-600 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-6 h-6 rounded-lg bg-[#1D2736] text-slate-300 font-mono text-xs flex items-center justify-center font-bold flex-shrink-0">
+                          #{idx + 5}
+                        </span>
+                        <img
+                          src={p.avatarUrl}
+                          alt={p.name}
+                          className="w-8 h-8 rounded-full object-cover border border-[#2A3B4E] flex-shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                        <div className="min-w-0">
+                          <div className="font-['Outfit'] font-bold text-xs text-white truncate">
+                            {p.name}
+                          </div>
+                          <div className="text-[10px] text-slate-400">
+                            {p.skillTier} • ~{(idx + 1) * 12}m wait
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs font-mono font-bold text-[#F4E022]">
+                          DUPR {p.duprRating.toFixed(2)}
+                        </span>
+                        {isHost && (
+                          <div
+                            className="flex items-center gap-1 pl-1 border-l border-[#202D3E]"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              title="Promote to Slot #1 (Priority Deck)"
+                              onClick={() => onHostPromotePlayer?.(p.id)}
+                              className="px-2 py-1 rounded bg-[#1D2B3A] hover:bg-[#F4E022]/20 text-[#F4E022] border border-[#2B3E54] flex items-center gap-1 text-[10px] font-['Outfit'] font-bold transition-colors cursor-pointer"
+                            >
+                              <ArrowUp className="w-3 h-3 stroke-[2.5]" />
+                              <span className="hidden sm:inline">Slot #1</span>
+                            </button>
+                            {globalIndex > 0 && (
+                              <button
+                                type="button"
+                                title="Move Left in Queue"
+                                onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex - 1)}
+                                className="p-1 rounded bg-[#141F2D] hover:bg-[#233346] text-slate-300 border border-[#233346] transition-colors cursor-pointer"
+                              >
+                                <ArrowLeft className="w-3 h-3" />
+                              </button>
+                            )}
+                            {globalIndex < rackPlayers.length - 1 && (
+                              <button
+                                type="button"
+                                title="Move Right in Queue"
+                                onClick={() => onMovePlayerInRack?.(globalIndex, globalIndex + 1)}
+                                className="p-1 rounded bg-[#141F2D] hover:bg-[#233346] text-slate-300 border border-[#233346] transition-colors cursor-pointer"
+                              >
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              title="Host Eject from Queue"
+                              onClick={() => onHostRemovePlayer?.(p.id)}
+                              className="p-1 rounded bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/40 transition-colors cursor-pointer"
+                            >
+                              <X className="w-3 h-3 stroke-[2.5]" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs font-mono font-bold text-[#F4E022]">
-                      DUPR {p.duprRating.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

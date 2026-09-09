@@ -1,4 +1,5 @@
-import { Player, Court, Quest, Badge } from '../types';
+import { Player, Court, Quest, Badge, PlaySchedule } from '../types';
+
 
 export const INITIAL_BADGES: Badge[] = [
   {
@@ -127,6 +128,19 @@ export const CURRENT_USER: Player = {
     surfaceFinish: 'textured-grit',
   },
   badges: INITIAL_BADGES,
+};
+
+export const INITIAL_SCHEDULE: PlaySchedule = {
+  id: 'sched_wordcomm_morning',
+  providerId: 'provider_wordcomm_hq',
+  hostPlayerId: CURRENT_USER.id,
+  title: 'Wordcomm Saturday Championship Open Play',
+  allocatedCourtIds: ['court_center', 'court_std_1', 'court_challenge', 'court_std_2'],
+  startTime: new Date(Date.now() - 3600 * 1000).toISOString(),
+  endTime: new Date(Date.now() + 3.5 * 3600 * 1000).toISOString(),
+  durationHours: 4.5,
+  status: 'active',
+  maxCapacity: 32,
 };
 
 export const INITIAL_PLAYERS: Player[] = [

@@ -11,9 +11,17 @@ import {
   INITIAL_PLAYERS,
   INITIAL_COURTS,
   INITIAL_QUESTS,
+  INITIAL_SCHEDULE,
 } from './data/initialData';
-import { Player, Court, PaddleConfig, Quest } from './types';
+import { Player, Court, PaddleConfig, Quest, PlaySchedule } from './types';
+import { isSessionHost } from './utils/hostPermissions';
+import {
+  movePlayerInRack,
+  insertPlayerAtPriorityDeck,
+  removePlayerFromRack,
+} from './utils/rackOperations';
 import { ClubLogo } from './components/ClubLogo';
+import { SessionHostBanner } from './components/SessionHostBanner';
 import { PaddleRack } from './components/PaddleRack';
 import { Matchmaker } from './components/Matchmaker';
 import { CourtsView } from './components/CourtsView';
@@ -47,6 +55,10 @@ export default function App() {
   ]);
   const [courts, setCourts] = useState<Court[]>(INITIAL_COURTS);
   const [quests, setQuests] = useState<Quest[]>(INITIAL_QUESTS);
+  const [schedule, setSchedule] = useState<PlaySchedule>(INITIAL_SCHEDULE);
+  const [isHostRoleActive, setIsHostRoleActive] = useState<boolean>(() =>
+    isSessionHost(CURRENT_USER, INITIAL_SCHEDULE)
+  );
 
   const [activeTab, setActiveTab] = useState<'rack' | 'matchmaking' | 'courts' | 'leaderboard'>('rack');
   const [inspectPlayer, setInspectPlayer] = useState<Player | null>(null);
@@ -351,6 +363,57 @@ export default function App() {
     showToast(`Claimed +${q.xpReward} XP for "${q.title}"!`);
   };
 
+  // Toggle Host role simulation
+  const handleToggleHostRole = () => {
+    setIsHostRoleActive((prev) => !prev);
+    showToast(!isHostRoleActive ? 'Session Host mode activated.' : 'Member view (read-only) activated.');
+  };
+
+  // Host moves a player in the rack
+  const handleMovePlayerInRack = (fromIndex: number, toIndex: number) => {
+    setRackPlayers((prev) => movePlayerInRack(prev, fromIndex, toIndex));
+    showToast(`Queue order adjusted (Slot #${fromIndex + 1} → Slot #${toIndex + 1})`);
+  };
+
+  // Host removes a player from the rack
+  const handleHostRemovePlayer = (playerId: string) => {
+    const target = rackPlayers.find((p) => p.id === playerId);
+    setRackPlayers((prev) => removePlayerFromRack(prev, playerId));
+    showToast(`Removed ${target?.name || 'player'} from the rack.`);
+  };
+
+  // Host promotes a player to slot 1 / priority deck
+  const handleHostPromotePlayer = (playerId: string) => {
+    const target =
+      rackPlayers.find((p) => p.id === playerId) ||
+      allPlayers.find((p) => p.id === playerId);
+    if (target) {
+      setRackPlayers((prev) => insertPlayerAtPriorityDeck(prev, target));
+      showToast(`Promoted ${target.name} to Priority Deck (Slot #1)!`);
+    }
+  };
+
+  // Host saves arbitrary court configuration
+  const handleSaveHostCourt = (updatedCourt: Court) => {
+    setCourts((prev) =>
+      prev.map((c) => (c.id === updatedCourt.id ? updatedCourt : c))
+    );
+    showToast(`Court "${updatedCourt.name}" updated by Session Host.`);
+  };
+
+  const availableBenchPlayers = allPlayers.filter(
+    (p) =>
+      !courts.some(
+        (c) =>
+          c.status === 'in-progress' &&
+          (c.teamA.some((a) => a.id === p.id) || c.teamB.some((b) => b.id === p.id))
+      )
+  );
+
+  const hostPlayer =
+    allPlayers.find((p) => p.id === schedule.hostPlayerId) ||
+    (currentUser.id === schedule.hostPlayerId ? currentUser : null);
+
   return (
     <div className="min-h-screen bg-[#0B0E14] text-slate-100 flex flex-col selection:bg-[#F4E022] selection:text-black">
       {/* Toast Notification Alert */}
@@ -436,6 +499,16 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* SESSION HOST BANNER */}
+      <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 pt-3 sm:pt-4">
+        <SessionHostBanner
+          schedule={schedule}
+          hostPlayer={hostPlayer}
+          isHost={isHostRoleActive}
+          onToggleHostRole={handleToggleHostRole}
+        />
+      </div>
 
       {/* QUICK STATUS BAR (If queued or courts live) */}
       <div className="bg-[#111722] border-b border-[#1C2534] px-3 sm:px-6 py-2">
@@ -548,6 +621,10 @@ export default function App() {
                 showToast('Paddle queue reset.');
               }}
               isUserInRack={isUserInRack}
+              isHost={isHostRoleActive}
+              onMovePlayerInRack={handleMovePlayerInRack}
+              onHostRemovePlayer={handleHostRemovePlayer}
+              onHostPromotePlayer={handleHostPromotePlayer}
             />
 
             {/* Quick Tips & Real-life Pickleball Rack etiquette banner */}
@@ -609,6 +686,9 @@ export default function App() {
             onFinishMatch={handleFinishMatch}
             onResetCourt={handleResetCourt}
             onSelectPlayer={(p) => setInspectPlayer(p)}
+            isHost={isHostRoleActive}
+            availableBenchPlayers={availableBenchPlayers}
+            onHostSaveCourt={handleSaveHostCourt}
           />
         )}
 
