@@ -45,16 +45,34 @@ This glossary establishes the canonical domain vocabulary for **Wordcomm Pickleb
 
 ---
 
-## 3. Player & Progression
+## 3. Player & Identity (Host Tooling Phase)
 
-### **Player / Member**
-*A registered club member holding a DUPR rating, skill tier, progression level, and customized paddle.*
+### **Player / Paddle Profile (`Player` / `PaddleProfile`)**
+*A participant profile managed directly by the Session Host within a session roster, containing a nickname, DUPR rating, skill tier, and basic paddle visual color.*
+- **Scope**: Used for queuing into the paddle rack, matchmaking balance, and court score recording.
+- **Invariants**: Can be added, modified, or removed directly by the Session Host.
 
 ### **DUPR Rating**
-*Dynamic Universal Pickleball Rating (e.g., 3.84) used for skill benchmarking, matchmaking balance, and club ranking.*
+*Dynamic Universal Pickleball Rating (numeric benchmark, e.g. 3.84) used for skill benchmarking, matchmaking balance, and court assignments.*
 
 ### **Skill Tier**
-*Categorical grouping based on rating:* `Novice`, `Intermediate`, `Advanced`, `Pro`.
+*Standardized categorical grouping derived from or assigned alongside DUPR rating:* `Novice` (< 3.0), `Intermediate` (3.0–3.99), `Advanced` (4.0–4.99), `Pro` (5.0+).
 
-### **Paddle Configuration (`PaddleConfig`)**
-*The personalized equipment specs of a player's paddle (face color, grip wrap, edge guard, pattern, surface texture).*
+### **Session Roster (`SessionRoster`)**
+*The master pool of participant paddle profiles registered for a specific session by the Session Host, from which players are enqueued into the paddle rack, dispatched to courts, or placed on rest.*
+
+### **Paddle Profile Visual (`PaddleConfig` / `paddleColor`)**
+*Simplified visual indicator (color/accent) for physical and digital paddle recognition in the rack.*
+
+---
+
+
+## 4. Parked Concepts (Future Reactivation)
+
+### **Player Progression (Parked)**
+*Gamification and player self-service concepts parked during the host tooling phase:*
+- **XP / Levels / Streak Days**: Automated progression leveling systems.
+- **Quests & Badges**: Achievement missions and milestone unlocks.
+- **Multi-layer Paddle Finishes**: Complex surface patterns, textures, and brand attachments.
+- **Self-Service Actions**: Player self-enqueuing and mobile self-check-in without host mediation.
+

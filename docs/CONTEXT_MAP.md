@@ -27,5 +27,6 @@ graph TD
 - **Relationship to Scheduling**: Consumes session window state and designated `SessionHost` credentials to enable/disable court dispatching, track court availability, and authorize administrative match/score overrides.
 
 ### 3. `Player & Identity` (`docs/contexts/player-identity/CONTEXT.md`)
-- **Domain Focus**: Club member profiles, DUPR ratings, gear customization (`PaddleConfig`), and progression (XP, Badges, Quests).
-- **Key Concepts**: `Player`, `SkillTier`, `Badge`, `Quest`, `PaddleConfig`.
+- **Domain Focus**: Host-managed paddle profiles, nickname identifiers, DUPR ratings & skill tiers, and simplified paddle visual indicators. (Player self-service progression, XP, badges, and quests are parked for future reactivation).
+- **Key Concepts**: `Player` / `PaddleProfile`, `SkillTier`, `DUPRRating`, `PaddleVisual` (`PaddleConfig`).
+

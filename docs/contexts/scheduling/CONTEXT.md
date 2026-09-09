@@ -33,3 +33,9 @@ A bounded time window dedicated to community pickleball play.
 2. **Provider Authority**: Players cannot unilaterally schedule or extend court time; all sessions are managed strictly by the Court Provider.
 3. **Session Host Assignment**: Every `PlaySchedule` must have a designated `hostPlayerId` (a valid registered Player) assigned by the Court Provider / scheduling admin prior to becoming `'active'`.
 4. **Queue & Court Gating**: Matchmaking and Paddle Rack operations are active only when an associated `CourtRental` status is `'active'`.
+
+---
+
+## Architectural Decisions
+- [ADR 001: Provider-Managed Fixed Session Windows (3–5 Hours) for Court Access](../../adrs/001-provider-managed-session-windows.md)
+
